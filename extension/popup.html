@@ -8,15 +8,15 @@
       :root {
         color-scheme: light;
         font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        --bg: #eef2ea;
-        --bg-accent: #dce9dd;
-        --card: rgba(255, 255, 255, 0.92);
-        --card-border: rgba(34, 67, 52, 0.1);
-        --text: #173122;
-        --muted: #5f7669;
-        --accent: #24583f;
-        --accent-strong: #183d2c;
-        --line: #d4dfd6;
+        --bg: #ffffff;
+        --panel: #ffffff;
+        --text: #1c281f;
+        --muted: #66756a;
+        --accent: #1f6a42;
+        --accent-strong: #164d31;
+        --line: #d8dfd7;
+        --line-strong: #c4cec5;
+        --soft: #f4f7f4;
       }
       * {
         box-sizing: border-box;
@@ -25,70 +25,65 @@
         margin: 0;
         min-width: 420px;
         max-width: 540px;
-        min-height: 100vh;
         color: var(--text);
-        background:
-          radial-gradient(circle at top right, rgba(44, 88, 65, 0.16), transparent 20rem),
-          radial-gradient(circle at bottom left, rgba(160, 197, 153, 0.2), transparent 18rem),
-          linear-gradient(180deg, #f8faf6 0%, var(--bg) 100%);
+        background: var(--bg);
       }
       .shell {
-        padding: 14px;
+        padding: 0 16px 16px;
       }
-      .hero {
-        position: relative;
-        overflow: hidden;
-        padding: 16px;
-        border-radius: 18px;
-        background: linear-gradient(135deg, #1d4d37 0%, #2f6b4d 100%);
-        color: #f6fbf6;
-        box-shadow: 0 16px 36px rgba(24, 61, 44, 0.18);
-        margin-bottom: 12px;
+      .masthead {
+        padding: 16px 0 14px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 14px;
       }
-      .hero h1 {
-        margin: 0 0 8px;
-        font-size: 17px;
-        line-height: 1.2;
+      .masthead h1 {
+        margin: 0 0 4px;
+        font-size: 15px;
+        line-height: 1.25;
+        font-weight: 700;
       }
-      .hero p {
+      .masthead p {
         margin: 0;
         font-size: 12.5px;
         line-height: 1.55;
-        color: rgba(246, 251, 246, 0.9);
+        color: var(--muted);
       }
       .grid {
         display: grid;
-        gap: 12px;
+        gap: 0;
       }
-      .card {
-        padding: 14px;
-        border-radius: 18px;
-        border: 1px solid var(--card-border);
-        background: var(--card);
-        box-shadow: 0 8px 24px rgba(29, 58, 44, 0.08);
-        backdrop-filter: blur(8px);
+      .section {
+        padding: 14px 0 16px;
+        border-top: 1px solid var(--line);
       }
-      .card-heading {
+      .section:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+      .section-heading {
         display: flex;
         align-items: baseline;
         gap: 8px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         min-width: 0;
       }
-      .card-heading h2 {
+      .section-heading h2 {
         margin: 0;
-        font-size: 14px;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
         flex: 0 1 auto;
         min-width: 0;
+        color: var(--muted);
       }
-      .card-heading .heading-meta {
+      .section-heading .heading-meta {
         flex: 1 1 auto;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         font-size: 12px;
-        color: var(--muted);
+        color: var(--text);
       }
       .field {
         display: grid;
@@ -102,13 +97,17 @@
         width: 100%;
         padding: 10px 11px;
         border: 1px solid var(--line);
-        border-radius: 12px;
+        border-radius: 6px;
         background: #fff;
         color: var(--text);
         font: inherit;
       }
+      .field input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
       .field input:disabled {
-        background: #f4f7f3;
+        background: var(--soft);
         color: #6f8175;
       }
       .input-action {
@@ -120,7 +119,7 @@
       .input-action button {
         min-width: 58px;
         padding: 9px 12px;
-        border-radius: 10px;
+        border-radius: 6px;
         box-shadow: none;
       }
       .hint {
@@ -140,14 +139,12 @@
         align-items: start;
         padding: 10px 11px;
         border: 1px solid var(--line);
-        border-radius: 12px;
-        background: #fff;
+        border-radius: 6px;
+        background: var(--panel);
         cursor: pointer;
         transition:
           border-color 120ms ease,
-          box-shadow 120ms ease,
-          background 120ms ease,
-          transform 120ms ease;
+          background 120ms ease;
       }
       .radio-option input {
         margin: 2px 0 0;
@@ -179,20 +176,18 @@
         grid-template-columns: minmax(0, 1fr) auto;
       }
       .radio-option:hover {
-        border-color: rgba(36, 88, 63, 0.28);
-        background: linear-gradient(180deg, #ffffff 0%, #f8fcf8 100%);
+        border-color: var(--line-strong);
+        background: var(--soft);
       }
       .radio-option.is-selected {
-        border-color: rgba(36, 88, 63, 0.45);
-        box-shadow: inset 0 0 0 1px rgba(36, 88, 63, 0.08);
-        background: linear-gradient(180deg, #ffffff 0%, #f4faf5 100%);
-        transform: translateY(-1px);
+        border-color: var(--accent);
+        background: #f7fbf8;
       }
       .stat {
         padding: 12px;
-        border-radius: 14px;
-        background: linear-gradient(180deg, #f6faf5 0%, #edf4eb 100%);
-        border: 1px solid #dce7d9;
+        border-radius: 6px;
+        background: var(--soft);
+        border: 1px solid var(--line);
         font-size: 12.5px;
         line-height: 1.55;
       }
@@ -205,16 +200,16 @@
       }
       button {
         appearance: none;
-        border: 0;
-        border-radius: 999px;
-        padding: 11px 14px;
+        border: 1px solid var(--accent);
+        border-radius: 6px;
+        padding: 10px 14px;
         background: var(--accent);
         color: #fff;
         font: inherit;
         font-size: 12.5px;
         font-weight: 600;
         cursor: pointer;
-        box-shadow: 0 12px 24px rgba(36, 88, 63, 0.18);
+        box-shadow: none;
       }
       button:disabled {
         opacity: 0.65;
@@ -224,14 +219,14 @@
   </head>
   <body>
     <div class="shell">
-      <section class="hero">
+      <section class="masthead">
         <h1>Shopify 密码配置</h1>
         <p>统一维护默认密码与站点级策略，让密码页自动登录和当前项目的跳转链路保持解耦。</p>
       </section>
 
       <div class="grid">
-        <section class="card">
-          <div class="card-heading">
+        <section class="section">
+          <div class="section-heading">
             <h2>当前站点</h2>
             <div class="heading-meta"><strong id="currentHostname">读取中...</strong></div>
           </div>
@@ -278,8 +273,8 @@
           </form>
         </section>
 
-        <section class="card">
-          <div class="card-heading">
+        <section class="section">
+          <div class="section-heading">
             <h2>全局默认密码</h2>
           </div>
           <div class="field">
