@@ -108,6 +108,14 @@
             customPassword: message.customPassword
           });
           break;
+        case "shopify-settings:complete-login":
+          task = store.completeLogin({
+            hostname: message.hostname,
+            password: message.password,
+            persistPassword: message.persistPassword,
+            isAutoLogin: message.isAutoLogin
+          });
+          break;
         default:
           return false;
       }

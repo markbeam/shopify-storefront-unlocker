@@ -61,6 +61,7 @@
 
   function renderSiteConfig(elements, settings, hostname, customPasswordDraft) {
     const siteConfig = settingsNamespace.findSiteConfig(settings.siteConfigs, hostname);
+    const siteStat = settingsNamespace.findSiteStat(settings.siteStats, hostname);
     const effective = settingsNamespace.getEffectiveSiteView(settings, hostname);
     const isShopifyHostname = settingsNamespace.isShopifyHostname(hostname);
 
@@ -96,16 +97,17 @@
       elements.siteStat.innerHTML = "当前站点使用<strong>自定义密码</strong>。";
     }
 
-    if (siteConfig && siteConfig.autoLoginCount > 0 && siteConfig.autoLoginStartedAt) {
-      elements.siteStat.innerHTML = `自 ${formatDateTime(siteConfig.autoLoginStartedAt)} 起，已为您自动登录 ${siteConfig.autoLoginCount} 次。`;
+    if (siteStat && siteStat.autoLoginCount > 0 && siteStat.autoLoginStartedAt) {
+      elements.siteStat.innerHTML = `自 ${formatDateTime(siteStat.autoLoginStartedAt)} 起，已为您自动登录 ${siteStat.autoLoginCount} 次。`;
     }
 
-    if (siteConfig && siteConfig.lastAutoLoginAt) {
-      elements.siteStat.innerHTML += `<br>最近一次自动登录：${formatDateTime(siteConfig.lastAutoLoginAt)}`;
+    if (siteStat && siteStat.lastAutoLoginAt) {
+      elements.siteStat.innerHTML += `<br>最近一次自动登录：${formatDateTime(siteStat.lastAutoLoginAt)}`;
     }
 
     return {
       siteConfig,
+      siteStat,
       effective,
       customPasswordDraft: nextDraft
     };

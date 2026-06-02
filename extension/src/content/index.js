@@ -6,6 +6,9 @@
   const namespace = root.RedirectSourceBannerContent;
   const AUTO_LOGIN_CONTAINER_CLASS = "redirect-source-auto-login";
   let autoSubmitAttempted = false;
+  let submitInterceptionInstalled = false;
+  let activePayload = null;
+  let submitInFlight = false;
 
   if (!shared || !api || !api.runtime || !namespace || typeof namespace.renderBanner !== "function") {
     return;
@@ -140,8 +143,159 @@
     return response.status >= 300 && response.status < 400;
   }
 
+  function resolveRedirectTarget(payload) {
+    return payload && payload.fromUrl ? payload.fromUrl : "";
+  }
+
+  async function persistLoginSuccess(password, options) {
+    const response = await shared.callRuntime(api, {
+      type: "shopify-settings:complete-login",
+      hostname: location.hostname,
+      password,
+      persistPassword: Boolean(options && options.persistPassword),
+      isAutoLogin: Boolean(options && options.isAutoLogin)
+    }).catch((error) => {
+      log("completeLogin:config_error", {
+        message: error && error.message ? error.message : String(error)
+      });
+      return null;
+    });
+
+    if (!response || !response.ok) {
+      log("completeLogin:config_rejected", {
+        error: response && response.error ? response.error : "unknown_error"
+      });
+    }
+  }
+
+  async function submitUnlockForm(form, input, password, payload, options) {
+    const checkbox = options && options.autoLoginCheckbox ? options.autoLoginCheckbox : null;
+    const isAutoLogin = Boolean(options && options.isAutoLogin);
+    const persistPassword = Boolean(checkbox && checkbox.checked);
+    const normalizedPassword = String(password || "").trim();
+    if (!form || !input || !normalizedPassword) {
+      return false;
+    }
+
+    clearPasswordError(input);
+    input.value = normalizedPassword;
+    submitInFlight = true;
+
+    const method = (form.getAttribute("method") || "post").toUpperCase();
+    const action = form.getAttribute("action") || location.href;
+    const formData = new FormData(form);
+    formData.set("password", normalizedPassword);
+    const requestUrl = new URL(action, location.href);
+
+    if (method === "GET") {
+      const params = new URLSearchParams(formData);
+      requestUrl.search = params.toString();
+    }
+
+    const targetUrl = requestUrl.toString();
+
+    log("autoUnlock:submit", {
+      method,
+      targetUrl,
+      redirectTo: resolveRedirectTarget(payload),
+      mode: isAutoLogin ? "auto" : "manual",
+      persistPassword
+    });
+
+    try {
+      const submitResponse = await fetch(targetUrl, {
+        method,
+        body: method === "GET" ? undefined : formData,
+        credentials: "same-origin",
+        redirect: "manual",
+        headers: method === "GET" ? undefined : {
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+        }
+      });
+
+      if (isRedirectResponse(submitResponse)) {
+        await persistLoginSuccess(normalizedPassword, {
+          persistPassword,
+          isAutoLogin
+        });
+
+        log("autoUnlock:success", {
+          status: submitResponse.status,
+          type: submitResponse.type,
+          redirectTo: resolveRedirectTarget(payload),
+          mode: isAutoLogin ? "auto" : "manual",
+          persistPassword
+        });
+
+        if (resolveRedirectTarget(payload)) {
+          location.href = resolveRedirectTarget(payload);
+          return;
+        }
+
+        location.reload();
+        return;
+      }
+
+      showPasswordError(input);
+      log("autoUnlock:non_redirect_response", {
+        status: submitResponse.status,
+        type: submitResponse.type
+      });
+    } catch (error) {
+      showPasswordError(input);
+      log("autoUnlock:error", {
+        message: error && error.message ? error.message : String(error)
+      });
+    } finally {
+      submitInFlight = false;
+    }
+
+    return false;
+  }
+
+  function ensureSubmitInterception(payload) {
+    if (payload) {
+      activePayload = payload;
+    }
+
+    if (submitInterceptionInstalled || !isPasswordPage()) {
+      return;
+    }
+
+    const form = findUnlockForm();
+    const input = getPasswordInput(form);
+    if (!form || !input) {
+      return;
+    }
+
+    submitInterceptionInstalled = true;
+    form.addEventListener("submit", async (event) => {
+      const autoLoginCheckbox = ensureAutoLoginToggle(form);
+      const password = String(input.value || "").trim();
+
+      if (!password || submitInFlight) {
+        if (submitInFlight) {
+          event.preventDefault();
+        }
+        return;
+      }
+
+      event.preventDefault();
+      await submitUnlockForm(form, input, password, activePayload, {
+        autoLoginCheckbox,
+        isAutoLogin: false
+      });
+    });
+  }
+
   async function autoUnlock(payload) {
-    if (autoSubmitAttempted || !isPasswordPage()) {
+    if (!isPasswordPage()) {
+      return;
+    }
+
+    ensureSubmitInterception(payload);
+
+    if (autoSubmitAttempted) {
       return;
     }
 
@@ -178,82 +332,19 @@
     }
 
     autoLoginCheckbox.checked = effective.source !== "manual";
-    clearPasswordError(input);
     autoSubmitAttempted = true;
-
-    const method = (form.getAttribute("method") || "post").toUpperCase();
-    const action = form.getAttribute("action") || location.href;
-    const formData = new FormData(form);
-    formData.set("password", effective.password);
-    input.value = effective.password;
-    const requestUrl = new URL(action, location.href);
-
-    if (method === "GET") {
-      const params = new URLSearchParams(formData);
-      requestUrl.search = params.toString();
-    }
-
-    const targetUrl = requestUrl.toString();
-
-    log("autoUnlock:submit", {
-      method,
-      targetUrl,
-      redirectTo: payload && payload.fromUrl,
-      source: effective.source
+    await submitUnlockForm(form, input, effective.password, payload, {
+      autoLoginCheckbox,
+      isAutoLogin: true
     });
-
-    try {
-      const submitResponse = await fetch(targetUrl, {
-        method,
-        body: method === "GET" ? undefined : formData,
-        credentials: "same-origin",
-        redirect: "manual",
-        headers: method === "GET" ? undefined : {
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-        }
-      });
-
-      if (isRedirectResponse(submitResponse)) {
-        if (autoLoginCheckbox && autoLoginCheckbox.checked) {
-          await shared.callRuntime(api, {
-            type: "shopify-settings:record-auto-login",
-            hostname: location.hostname,
-            source: "custom",
-            customPassword: effective.password
-          }).catch(() => undefined);
-        }
-
-        log("autoUnlock:success", {
-          status: submitResponse.status,
-          type: submitResponse.type,
-          redirectTo: payload && payload.fromUrl,
-          persistedAsCustom: Boolean(autoLoginCheckbox && autoLoginCheckbox.checked)
-        });
-
-        if (payload && payload.fromUrl) {
-          location.href = payload.fromUrl;
-          return;
-        }
-
-        location.reload();
-        return;
-      }
-
-      showPasswordError(input);
-      log("autoUnlock:non_redirect_response", {
-        status: submitResponse.status,
-        type: submitResponse.type
-      });
-    } catch (error) {
-      showPasswordError(input);
-      log("autoUnlock:error", {
-        message: error && error.message ? error.message : String(error)
-      });
-    }
   }
 
   function handlePayload(payload) {
+    if (payload) {
+      activePayload = payload;
+    }
     namespace.renderBanner(payload);
+    ensureSubmitInterception(payload);
   }
 
   function requestBannerPayload() {

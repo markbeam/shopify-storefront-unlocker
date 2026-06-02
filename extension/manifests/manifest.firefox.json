@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "302 Redirect Source Banner",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Displays the URL captured before a server-side 302 redirect at the top of the redirected page.",
   "permissions": [
     "declarativeNetRequest",
