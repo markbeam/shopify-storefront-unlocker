@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shopify 密码配置</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --bg: #eef2ea;
+        --bg-accent: #dce9dd;
+        --card: rgba(255, 255, 255, 0.92);
+        --card-border: rgba(34, 67, 52, 0.1);
+        --text: #173122;
+        --muted: #5f7669;
+        --accent: #24583f;
+        --accent-strong: #183d2c;
+        --line: #d4dfd6;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-width: 420px;
+        max-width: 540px;
+        min-height: 100vh;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top right, rgba(44, 88, 65, 0.16), transparent 20rem),
+          radial-gradient(circle at bottom left, rgba(160, 197, 153, 0.2), transparent 18rem),
+          linear-gradient(180deg, #f8faf6 0%, var(--bg) 100%);
+      }
+      .shell {
+        padding: 14px;
+      }
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 16px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #1d4d37 0%, #2f6b4d 100%);
+        color: #f6fbf6;
+        box-shadow: 0 16px 36px rgba(24, 61, 44, 0.18);
+        margin-bottom: 12px;
+      }
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: 17px;
+        line-height: 1.2;
+      }
+      .hero p {
+        margin: 0;
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: rgba(246, 251, 246, 0.9);
+      }
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+      .card {
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid var(--card-border);
+        background: var(--card);
+        box-shadow: 0 8px 24px rgba(29, 58, 44, 0.08);
+        backdrop-filter: blur(8px);
+      }
+      .card-heading {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 12px;
+        min-width: 0;
+      }
+      .card-heading h2 {
+        margin: 0;
+        font-size: 14px;
+        flex: 0 1 auto;
+        min-width: 0;
+      }
+      .card-heading .heading-meta {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+      .field label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .field input {
+        width: 100%;
+        padding: 10px 11px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+      }
+      .field input:disabled {
+        background: #f4f7f3;
+        color: #6f8175;
+      }
+      .input-action {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+      }
+      .input-action button {
+        min-width: 58px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        box-shadow: none;
+      }
+      .hint {
+        margin: 12px 0 0;
+        font-size: 12px;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+      .radio-group {
+        display: grid;
+        gap: 8px;
+      }
+      .radio-option {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 10px 12px;
+        align-items: start;
+        padding: 10px 11px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        cursor: pointer;
+        transition:
+          border-color 120ms ease,
+          box-shadow 120ms ease,
+          background 120ms ease,
+          transform 120ms ease;
+      }
+      .radio-option input {
+        margin: 2px 0 0;
+      }
+      .radio-option .radio-copy {
+        min-width: 0;
+      }
+      .radio-option strong {
+        display: block;
+        font-size: 12.5px;
+        line-height: 1.35;
+      }
+      .radio-option .radio-copy-text {
+        display: block;
+        margin-top: 3px;
+        font-size: 11.5px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+      .radio-option .nested-field {
+        grid-column: 2;
+        margin: 2px 0 0;
+        min-width: 0;
+      }
+      .radio-option .nested-field[hidden] {
+        display: none;
+      }
+      .radio-option .nested-field .input-action {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+      .radio-option:hover {
+        border-color: rgba(36, 88, 63, 0.28);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fcf8 100%);
+      }
+      .radio-option.is-selected {
+        border-color: rgba(36, 88, 63, 0.45);
+        box-shadow: inset 0 0 0 1px rgba(36, 88, 63, 0.08);
+        background: linear-gradient(180deg, #ffffff 0%, #f4faf5 100%);
+        transform: translateY(-1px);
+      }
+      .stat {
+        padding: 12px;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #f6faf5 0%, #edf4eb 100%);
+        border: 1px solid #dce7d9;
+        font-size: 12.5px;
+        line-height: 1.55;
+      }
+      .stat-wrap {
+        margin-top: 12px;
+        margin-bottom: 12px;
+      }
+      .stat strong {
+        color: var(--accent-strong);
+      }
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        padding: 11px 14px;
+        background: var(--accent);
+        color: #fff;
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 12px 24px rgba(36, 88, 63, 0.18);
+      }
+      button:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <h1>Shopify 密码配置</h1>
+        <p>统一维护默认密码与站点级策略，让密码页自动登录和当前项目的跳转链路保持解耦。</p>
+      </section>
+
+      <div class="grid">
+        <section class="card">
+          <div class="card-heading">
+            <h2>当前站点</h2>
+            <div class="heading-meta"><strong id="currentHostname">读取中...</strong></div>
+          </div>
+
+          <form id="siteForm">
+            <div class="stat-wrap">
+              <div class="stat" id="siteStat">读取当前站点配置中...</div>
+            </div>
+
+            <div class="field">
+              <label>密码来源</label>
+              <div class="radio-group" id="sitePasswordSource">
+                <label class="radio-option">
+                  <input type="radio" name="sitePasswordSource" value="global" checked>
+                  <span class="radio-copy">
+                    <strong>使用全局默认密码</strong>
+                    <span class="radio-copy-text">站点会沿用全局默认密码，适合大多数共用密码的店铺。</span>
+                  </span>
+                </label>
+
+                <label class="radio-option">
+                  <input type="radio" name="sitePasswordSource" value="manual">
+                  <span class="radio-copy">
+                    <strong>手动登录</strong>
+                    <span class="radio-copy-text">访问 `/password` 页面时不自动尝试密码，完全交给你手动处理。</span>
+                  </span>
+                </label>
+
+                <label class="radio-option">
+                  <input type="radio" name="sitePasswordSource" value="custom">
+                  <div class="radio-copy">
+                      <strong>使用站点自定义密码</strong>
+                      <span class="radio-copy-text">为当前店铺单独维护一个密码，成功自动登录后也会统计到这里。</span>
+                  </div>
+                  <div class="nested-field" id="sitePasswordField" hidden>
+                    <div class="input-action">
+                      <input id="sitePassword" type="text" autocomplete="off" spellcheck="false">
+                      <button id="saveSiteButton" type="button">保存</button>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="card-heading">
+            <h2>全局默认密码</h2>
+          </div>
+          <div class="field">
+            <label for="globalDefaultPassword">用于没有单独配置的 Shopify 商店</label>
+            <div class="input-action">
+              <input id="globalDefaultPassword" type="text" autocomplete="off" spellcheck="false">
+              <button id="saveGlobalButton" type="button">保存</button>
+            </div>
+          </div>
+          <p class="hint">按回车或点击保存后生效，当前项目的密码页自动登录会优先读取这里的值。</p>
+        </section>
+      </div>
+    </div>
+
+    <script src="src/popup.js"></script>
+  </body>
+</html>

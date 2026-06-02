@@ -7,13 +7,27 @@ const targets = ["chrome", "edge", "firefox"];
 const bundles = [
   {
     output: ["src", "background.js"],
-    inputs: ["src/background/constants.js", "src/background/state.js", "src/background/index.js"]
+    inputs: [
+      "src/shared/browser-api.js",
+      "src/shared/settings.js",
+      "src/background/constants.js",
+      "src/background/state.js",
+      "src/background/action-state.js",
+      "src/background/settings-service.js",
+      "src/background/index.js"
+    ]
   },
   {
     output: ["src", "content.js"],
-    inputs: ["src/content/banner.js", "src/content/index.js"]
+    inputs: ["src/shared/browser-api.js", "src/content/banner.js", "src/content/index.js"]
+  },
+  {
+    output: ["src", "popup.js"],
+    inputs: ["src/shared/browser-api.js", "src/shared/settings.js", "src/popup/view.js", "src/popup/index.js"]
   }
 ];
+
+const staticFiles = ["popup.html"];
 
 async function copySourceTree(outDir) {
   const sourceRoot = path.join(root, "src");
@@ -47,6 +61,9 @@ async function buildTarget(target) {
   await mkdir(outDir, { recursive: true });
   await copySourceTree(outDir);
   await cp(path.join(root, "rules"), path.join(outDir, "rules"), { recursive: true });
+  await Promise.all(
+    staticFiles.map((file) => cp(path.join(root, file), path.join(outDir, file)))
+  );
 
   const manifest = await readFile(manifestPath, "utf8");
   await writeFile(path.join(outDir, "manifest.json"), manifest);

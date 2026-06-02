@@ -1,13 +1,13 @@
 (function (root) {
   "use strict";
 
-  const api = root.browser || root.chrome;
+  const shared = root.RedirectSourceBannerShared;
+  const api = shared && shared.getApi ? shared.getApi() : null;
   const namespace = root.RedirectSourceBannerContent;
-  const AUTO_PASSWORD = "1";
   const AUTO_LOGIN_CONTAINER_CLASS = "redirect-source-auto-login";
   let autoSubmitAttempted = false;
 
-  if (!api || !api.runtime || !namespace || typeof namespace.renderBanner !== "function") {
+  if (!shared || !api || !api.runtime || !namespace || typeof namespace.renderBanner !== "function") {
     return;
   }
 
@@ -82,7 +82,7 @@
     const label = document.createElement("label");
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.checked = true;
+    checkbox.checked = false;
 
     const text = document.createElement("span");
     text.textContent = "Auto login";
@@ -141,7 +141,7 @@
   }
 
   async function autoUnlock(payload) {
-    if (autoSubmitAttempted || !payload || !payload.fromUrl || !isPasswordPage()) {
+    if (autoSubmitAttempted || !isPasswordPage()) {
       return;
     }
 
@@ -158,15 +158,34 @@
     }
 
     const autoLoginCheckbox = ensureAutoLoginToggle(form);
+    const response = await shared.callRuntime(api, {
+      type: "shopify-settings:get-effective-for-tab",
+      hostname: location.hostname
+    }).catch((error) => {
+      log("autoUnlock:config_error", {
+        message: error && error.message ? error.message : String(error)
+      });
+      return null;
+    });
+
+    const effective = response && response.ok ? response.payload : null;
+    if (!effective || !effective.shouldAttempt || !String(effective.password || "").trim()) {
+      log("autoUnlock:skip", {
+        reason: "no_effective_password",
+        source: effective && effective.source
+      });
+      return;
+    }
+
+    autoLoginCheckbox.checked = effective.source !== "manual";
     clearPasswordError(input);
     autoSubmitAttempted = true;
 
     const method = (form.getAttribute("method") || "post").toUpperCase();
     const action = form.getAttribute("action") || location.href;
     const formData = new FormData(form);
-    if (!String(formData.get("password") || "").trim()) {
-      formData.set("password", AUTO_PASSWORD);
-    }
+    formData.set("password", effective.password);
+    input.value = effective.password;
     const requestUrl = new URL(action, location.href);
 
     if (method === "GET") {
@@ -179,11 +198,12 @@
     log("autoUnlock:submit", {
       method,
       targetUrl,
-      redirectTo: payload.fromUrl
+      redirectTo: payload && payload.fromUrl,
+      source: effective.source
     });
 
     try {
-      const response = await fetch(targetUrl, {
+      const submitResponse = await fetch(targetUrl, {
         method,
         body: method === "GET" ? undefined : formData,
         credentials: "same-origin",
@@ -193,25 +213,38 @@
         }
       });
 
-      if (isRedirectResponse(response)) {
-        alert(`Auto login checked: ${Boolean(autoLoginCheckbox && autoLoginCheckbox.checked)}`);
+      if (isRedirectResponse(submitResponse)) {
+        if (autoLoginCheckbox && autoLoginCheckbox.checked) {
+          await shared.callRuntime(api, {
+            type: "shopify-settings:record-auto-login",
+            hostname: location.hostname,
+            source: "custom",
+            customPassword: effective.password
+          }).catch(() => undefined);
+        }
+
         log("autoUnlock:success", {
-          status: response.status,
-          type: response.type,
-          redirectTo: payload.fromUrl
+          status: submitResponse.status,
+          type: submitResponse.type,
+          redirectTo: payload && payload.fromUrl,
+          persistedAsCustom: Boolean(autoLoginCheckbox && autoLoginCheckbox.checked)
         });
-        location.href = payload.fromUrl;
+
+        if (payload && payload.fromUrl) {
+          location.href = payload.fromUrl;
+          return;
+        }
+
+        location.reload();
         return;
       }
 
-      alert(`Auto login checked: ${Boolean(autoLoginCheckbox && autoLoginCheckbox.checked)}`);
       showPasswordError(input);
       log("autoUnlock:non_redirect_response", {
-        status: response.status,
-        type: response.type
+        status: submitResponse.status,
+        type: submitResponse.type
       });
     } catch (error) {
-      alert(`Auto login checked: ${Boolean(autoLoginCheckbox && autoLoginCheckbox.checked)}`);
       showPasswordError(input);
       log("autoUnlock:error", {
         message: error && error.message ? error.message : String(error)
@@ -221,26 +254,13 @@
 
   function handlePayload(payload) {
     namespace.renderBanner(payload);
-    autoUnlock(payload);
   }
 
-  function requestPayload() {
-    const message = {
+  function requestBannerPayload() {
+    return shared.callRuntime(api, {
       type: "redirect-source-banner:get",
       finalUrl: location.href
-    };
-
-    if (root.browser && api === root.browser) {
-      api.runtime.sendMessage(message).then(handlePayload).catch(() => undefined);
-      return;
-    }
-
-    api.runtime.sendMessage(message, (payload) => {
-      if (api.runtime.lastError) {
-        return;
-      }
-      handlePayload(payload);
-    });
+    }).catch(() => null);
   }
 
   api.runtime.onMessage.addListener((message) => {
@@ -252,5 +272,15 @@
     return false;
   });
 
-  requestPayload();
+  async function initialize() {
+    const payload = await requestBannerPayload();
+    handlePayload(payload);
+    await autoUnlock(payload);
+  }
+
+  initialize().catch((error) => {
+    log("initialize:error", {
+      message: error && error.message ? error.message : String(error)
+    });
+  });
 })(globalThis);

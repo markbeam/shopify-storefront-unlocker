@@ -3,9 +3,9 @@
 
   const api = root.browser || root.chrome;
   const namespace = root.RedirectSourceBannerBackground;
-  const HOST_ID = "redirect-source-url-banner-host";
+  const settingsNamespace = root.RedirectSourceBannerSettings;
 
-  if (!api || !namespace || typeof namespace.createStateManager !== "function") {
+  if (!api || !namespace || typeof namespace.createStateManager !== "function" || !settingsNamespace) {
     return;
   }
 
@@ -33,6 +33,12 @@
   }
 
   let stateManager;
+  const settingsService = typeof namespace.createSettingsService === "function"
+    ? namespace.createSettingsService(api)
+    : null;
+  const actionStateService = typeof namespace.createActionStateService === "function"
+    ? namespace.createActionStateService(api)
+    : null;
 
   async function sendRenderMessage(tabId) {
     const payload = await stateManager.getDisplayForTab(tabId);
@@ -50,6 +56,10 @@
   }
 
   stateManager = namespace.createStateManager(api, sendRenderMessage);
+  if (actionStateService) {
+    actionStateService.registerListeners();
+    actionStateService.refreshAllTabs().catch(() => undefined);
+  }
 
   if (api.declarativeNetRequest && api.declarativeNetRequest.onRuleMatchedDebug) {
     api.declarativeNetRequest.onRuleMatchedDebug.addListener((info) => {
@@ -138,6 +148,10 @@
 
   if (api.runtime && api.runtime.onMessage) {
     api.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (settingsService && settingsService.handleMessage(message, sender, sendResponse)) {
+        return true;
+      }
+
       if (!message || message.type !== "redirect-source-banner:get") {
         return false;
       }

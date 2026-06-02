@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "302 Redirect Source Banner",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Displays the URL captured before a server-side 302 redirect at the top of the redirected page.",
   "permissions": [
     "declarativeNetRequest",
@@ -16,7 +16,8 @@
     "scripts": ["src/background.js"]
   },
   "action": {
-    "default_title": "302 Redirect Source Banner"
+    "default_title": "Shopify 密码配置",
+    "default_popup": "popup.html"
   },
   "browser_specific_settings": {
     "gecko": {
