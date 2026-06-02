@@ -1,0 +1,9 @@
+{
+  "name": "redirect-source-banner-extension",
+  "private": true,
+  "version": "0.1.5",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "302 Redirect Source Banner",
+  "version": "0.1.5",
+  "description": "Displays the URL captured before a server-side 302 redirect at the top of the redirected page.",
+  "permissions": [
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "storage",
+    "tabs",
+    "webRequest",
+    "webNavigation"
+  ],
+  "host_permissions": ["https://*.myshopify.com/*"],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "action": {
+    "default_title": "302 Redirect Source Banner"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "main_frame_tracker",
+        "enabled": true,
+        "path": "rules/main-frame-tracker.json"
+      }
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.myshopify.com/*"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
