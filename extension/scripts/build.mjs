@@ -28,6 +28,7 @@ const bundles = [
 ];
 
 const staticFiles = ["popup.html"];
+const staticDirs = ["assets"];
 
 async function copySourceTree(outDir) {
   const sourceRoot = path.join(root, "src");
@@ -63,6 +64,9 @@ async function buildTarget(target) {
   await cp(path.join(root, "rules"), path.join(outDir, "rules"), { recursive: true });
   await Promise.all(
     staticFiles.map((file) => cp(path.join(root, file), path.join(outDir, file)))
+  );
+  await Promise.all(
+    staticDirs.map((dir) => cp(path.join(root, dir), path.join(outDir, dir), { recursive: true }))
   );
 
   const manifest = await readFile(manifestPath, "utf8");
