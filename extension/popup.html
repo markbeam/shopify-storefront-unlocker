@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Shopify 密码配置</title>
+    <title>Shopify 密码设置</title>
     <style>
       :root {
         color-scheme: light;
@@ -220,46 +220,46 @@
   <body>
     <div class="shell">
       <section class="masthead">
-        <h1>Shopify 密码配置</h1>
-        <p>统一维护默认密码与站点级策略，让密码页自动登录和当前项目的跳转链路保持解耦。</p>
+        <h1>Shopify 密码设置</h1>
+        <p>在这里设置默认密码和单店密码。密码页自动登录会优先使用这里的设置。</p>
       </section>
 
       <div class="grid">
         <section class="section">
           <div class="section-heading">
-            <h2>当前站点</h2>
-            <div class="heading-meta"><strong id="currentHostname">读取中...</strong></div>
+            <h2>当前店铺</h2>
+            <div class="heading-meta"><strong id="currentHostname">正在读取...</strong></div>
           </div>
 
           <form id="siteForm">
             <div class="stat-wrap">
-              <div class="stat" id="siteStat">读取当前站点配置中...</div>
+              <div class="stat" id="siteStat">正在读取当前店铺设置...</div>
             </div>
 
             <div class="field">
-              <label>密码来源</label>
+              <label>登录方式</label>
               <div class="radio-group" id="sitePasswordSource">
                 <label class="radio-option">
                   <input type="radio" name="sitePasswordSource" value="global" checked>
                   <span class="radio-copy">
-                    <strong>使用全局默认密码</strong>
-                    <span class="radio-copy-text">站点会沿用全局默认密码，适合大多数共用密码的店铺。</span>
+                    <strong>使用默认密码</strong>
+                    <span class="radio-copy-text">适合大多数共用同一密码的店铺。</span>
                   </span>
                 </label>
 
                 <label class="radio-option">
                   <input type="radio" name="sitePasswordSource" value="manual">
                   <span class="radio-copy">
-                    <strong>手动登录</strong>
-                    <span class="radio-copy-text">访问 `/password` 页面时不自动尝试密码，完全交给你手动处理。</span>
+                    <strong>手动处理</strong>
+                    <span class="radio-copy-text">不会自动尝试密码，需要时你再手动输入。</span>
                   </span>
                 </label>
 
                 <label class="radio-option">
                   <input type="radio" name="sitePasswordSource" value="custom">
                   <div class="radio-copy">
-                      <strong>使用站点自定义密码</strong>
-                      <span class="radio-copy-text">为当前店铺单独维护一个密码，成功自动登录后也会统计到这里。</span>
+                      <strong>使用单店密码</strong>
+                      <span class="radio-copy-text">为当前店铺单独设置一个密码。</span>
                   </div>
                   <div class="nested-field" id="sitePasswordField" hidden>
                     <div class="input-action">
@@ -275,16 +275,16 @@
 
         <section class="section">
           <div class="section-heading">
-            <h2>全局默认密码</h2>
+            <h2>默认密码</h2>
           </div>
           <div class="field">
-            <label for="globalDefaultPassword">用于没有单独配置的 Shopify 商店</label>
+            <label for="globalDefaultPassword">给未单独设置的店铺使用</label>
             <div class="input-action">
               <input id="globalDefaultPassword" type="text" autocomplete="off" spellcheck="false">
               <button id="saveGlobalButton" type="button">保存</button>
             </div>
           </div>
-          <p class="hint">按回车或点击保存后生效，当前项目的密码页自动登录会优先读取这里的值。</p>
+          <p class="hint">按回车或点击保存后立即生效。密码页自动登录会优先使用这里的值。</p>
         </section>
       </div>
     </div>

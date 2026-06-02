@@ -65,7 +65,7 @@
     const effective = settingsNamespace.getEffectiveSiteView(settings, hostname);
     const isShopifyHostname = settingsNamespace.isShopifyHostname(hostname);
 
-    elements.currentHostnameNode.textContent = hostname || "未找到当前标签页";
+    elements.currentHostnameNode.textContent = hostname || "未找到当前店铺";
     elements.siteForm.hidden = !isShopifyHostname;
 
     if (!isShopifyHostname) {
@@ -89,20 +89,20 @@
 
     if (source === "global") {
       elements.siteStat.innerHTML = effective.siteConfig
-        ? "当前站点使用<strong>全局默认密码</strong>。"
-        : "当前站点尚未单独配置，默认使用<strong>全局默认密码</strong>。";
+        ? "当前店铺使用<strong>默认密码</strong>。"
+        : "当前店铺还没有单独设置，自动使用<strong>默认密码</strong>。";
     } else if (source === "manual") {
-      elements.siteStat.innerHTML = "当前站点设置为<strong>手动登录</strong>，不会自动尝试密码。";
+      elements.siteStat.innerHTML = "当前店铺已设为<strong>手动处理</strong>，不会自动尝试密码。";
     } else {
-      elements.siteStat.innerHTML = "当前站点使用<strong>自定义密码</strong>。";
+      elements.siteStat.innerHTML = "当前店铺使用<strong>单店密码</strong>。";
     }
 
     if (siteStat && siteStat.autoLoginCount > 0 && siteStat.autoLoginStartedAt) {
-      elements.siteStat.innerHTML = `自 ${formatDateTime(siteStat.autoLoginStartedAt)} 起，已为您自动登录 ${siteStat.autoLoginCount} 次。`;
+      elements.siteStat.innerHTML = `从 ${formatDateTime(siteStat.autoLoginStartedAt)} 开始，已自动登录 ${siteStat.autoLoginCount} 次。`;
     }
 
     if (siteStat && siteStat.lastAutoLoginAt) {
-      elements.siteStat.innerHTML += `<br>最近一次自动登录：${formatDateTime(siteStat.lastAutoLoginAt)}`;
+      elements.siteStat.innerHTML += `<br>上次自动登录：${formatDateTime(siteStat.lastAutoLoginAt)}`;
     }
 
     return {
@@ -131,7 +131,7 @@
       }
       elements.sitePasswordInput.value = "";
     } else {
-      elements.sitePasswordInput.placeholder = "请输入站点自定义密码";
+      elements.sitePasswordInput.placeholder = "请输入单店密码";
     }
 
     elements.saveSiteButton.disabled = !isCustom || !elements.sitePasswordInput.value.trim();

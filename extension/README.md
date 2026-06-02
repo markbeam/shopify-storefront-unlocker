@@ -1,6 +1,6 @@
-# 302 Redirect Source Banner
+# Shopify Storefront Unlocker
 
-Browser extension for Chrome, Edge, and Firefox Manifest V3. It records the URL seen before a server-side redirect and inserts that URL into the redirected page as a floating top banner.
+一个面向 Shopify 店铺的浏览器扩展，帮助你更快处理密码页、自动登录和跳转后的来源查看。
 
 ## Project Layout
 
@@ -12,7 +12,21 @@ The source is organized by extension layer:
 - `rules/` contains `declarativeNetRequest` rule resources.
 - `scripts/` contains the build pipeline.
 
-## Build
+## 功能
+
+- 统一设置默认密码，适用于大多数共用密码的店铺。
+- 为单个店铺单独设置密码，互不影响。
+- 支持手动处理模式，适合不想自动尝试密码的场景。
+- 在支持的页面上自动填入并登录密码页。
+- 记录跳转前的来源地址，方便核对页面来源。
+
+## 使用
+
+1. 运行构建。
+2. 在浏览器中加载对应平台的 `dist` 目录。
+3. 打开扩展弹窗，按需设置默认密码或单店密码。
+
+构建命令：
 
 ```sh
 npm run build
@@ -46,19 +60,15 @@ Firefox:
 2. Choose Load Temporary Add-on.
 3. Select `extension/dist/firefox/manifest.json`.
 
-## How it works
+## 使用到的技术 API
 
-- `rules/main-frame-tracker.json` declares a Manifest V3 `declarativeNetRequest` rule for top-level HTTP and HTTPS navigations.
-- `src/background/index.js` listens for `declarativeNetRequest.onRuleMatchedDebug` to record matched navigation URLs.
-- `webRequest.onHeadersReceived` is used in read-only mode to mark exact `302` main-frame responses when the browser exposes the status code.
-- `webNavigation.onCommitted` is used to confirm that the final page was committed with the `server_redirect` qualifier.
-- `src/content/index.js` injects a Shadow DOM banner into `document.body` at the top of the redirected page.
+- `declarativeNetRequest`
+- `webNavigation`
+- `webRequest`
+- `tabs`
+- `storage`
+- `runtime.sendMessage`
+- `action.setPopup`
+- `action.setTitle`
+- `action.setIcon`
 
-`declarativeNetRequest` does not expose response status codes or `Location` response headers to extension JavaScript. The DNR rule provides the URL capture point, while `webNavigation` provides the browser signal that the committed page came from a server redirect.
-
-`declarativeNetRequest.onRuleMatchedDebug` requires the `declarativeNetRequestFeedback` permission and is intended for debugging or unpacked-extension workflows in Chromium browsers. For broader production distribution, you may need a store-policy review or a non-DNR fallback strategy.
-
-## Source Entry Points
-
-- `src/background/index.js`
-- `src/content/index.js`
