@@ -60,9 +60,20 @@ Firefox:
 2. Choose Load Temporary Add-on.
 3. Select `extension/dist/firefox/manifest.json`.
 
+## GitHub Actions 发布
+
+推送 `vX.Y.Z` 格式的 tag 后，GitHub Actions 会自动：
+
+- 构建 Chrome、Edge、Firefox 三个版本
+- 分别打包为可直接下载的 `.zip`
+- 自动上传到对应的 GitHub Release 附件
+
+发布前请先同步更新 [package.json](extension/package.json:1) 中的 `version`，并确保它和 tag 版本一致。
+
 ## 使用到的技术 API
 
 - `declarativeNetRequest`
+- `declarativeNetRequest.onRuleMatchedDebug`
 - `webNavigation`
 - `webRequest`
 - `tabs`
@@ -71,4 +82,3 @@ Firefox:
 - `action.setPopup`
 - `action.setTitle`
 - `action.setIcon`
-

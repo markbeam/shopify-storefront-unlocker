@@ -1,0 +1,91 @@
+name: Release Extension Packages
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build browser packages
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: extension
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Resolve release metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag_name="${GITHUB_REF_NAME:-manual}"
+          version="${tag_name#v}"
+
+          package_version="$(node -p "require('./package.json').version")"
+
+          if [[ "$tag_name" != "manual" && "$package_version" != "$version" ]]; then
+            echo "Tag version ($version) does not match extension/package.json version ($package_version)." >&2
+            exit 1
+          fi
+
+          if [[ "$tag_name" == "manual" ]]; then
+            version="$package_version"
+          fi
+
+          echo "tag_name=$tag_name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build extension bundles
+        run: npm run build
+
+      - name: Create release archives
+        id: package
+        shell: bash
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          release_dir="release"
+          rm -rf "$release_dir"
+          mkdir -p "$release_dir"
+
+          for target in chrome edge firefox; do
+            archive_name="shopify-storefront-unlocker-${target}-v${VERSION}.zip"
+            (
+              cd "dist/${target}"
+              zip -r "../../${release_dir}/${archive_name}" .
+            )
+          done
+
+          echo "release_dir=$release_dir" >> "$GITHUB_OUTPUT"
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-packages-v${{ steps.meta.outputs.version }}
+          path: extension/${{ steps.package.outputs.release_dir }}/*.zip
+          if-no-files-found: error
+
+      - name: Attach archives to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            extension/${{ steps.package.outputs.release_dir }}/*.zip
+          generate_release_notes: true
