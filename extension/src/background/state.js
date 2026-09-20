@@ -168,7 +168,12 @@
     }
 
     async function rememberNavigationRequest(tabId, request) {
-      if (!Number.isInteger(tabId) || tabId < 0 || !isMyShopifyUrl(request.url)) {
+      if (
+        !Number.isInteger(tabId)
+        || tabId < 0
+        || !isMyShopifyUrl(request.url)
+        || isPasswordPageUrl(request.url)
+      ) {
         return;
       }
 
@@ -197,7 +202,11 @@
 
     function redirectSourceFromRequests(requests, finalUrl) {
       const eligible = (requests || []).filter((item) => {
-        return item && isHttpUrl(item.url) && item.url !== finalUrl && item.time >= now() - namespace.TRACK_TTL_MS;
+        return item
+          && isHttpUrl(item.url)
+          && !isPasswordPageUrl(item.url)
+          && item.url !== finalUrl
+          && item.time >= now() - namespace.TRACK_TTL_MS;
       });
 
       if (!eligible.length) {
