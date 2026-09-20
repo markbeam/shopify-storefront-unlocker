@@ -20,7 +20,8 @@
 
   function isPasswordPage() {
     try {
-      return /\.myshopify\.com$/i.test(location.hostname) && location.pathname === "/password";
+      return /\.myshopify\.com$/i.test(location.hostname)
+        && shared.isShopifyPasswordPath(location.pathname);
     } catch {
       return false;
     }

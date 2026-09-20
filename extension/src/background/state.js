@@ -2,6 +2,7 @@
   "use strict";
 
   const namespace = root.RedirectSourceBannerBackground;
+  const shared = root.RedirectSourceBannerShared;
 
   function now() {
     return Date.now();
@@ -30,7 +31,7 @@
 
   function isPasswordPageUrl(url) {
     const parsed = parseUrl(url);
-    return Boolean(parsed && parsed.pathname === "/password");
+    return Boolean(parsed && shared && shared.isShopifyPasswordPath(parsed.pathname));
   }
 
   function domainFromUrl(url) {

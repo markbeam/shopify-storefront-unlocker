@@ -7,6 +7,11 @@
     return root.browser || root.chrome || null;
   }
 
+  function isShopifyPasswordPath(pathname) {
+    return typeof pathname === "string"
+      && /^\/(?:[a-z]{2,3}(?:-[a-z0-9]{2,8})*\/)?password\/?$/i.test(pathname);
+  }
+
   function callRuntime(api, message) {
     if (!api || !api.runtime || typeof api.runtime.sendMessage !== "function") {
       return Promise.reject(new Error("Runtime messaging is unavailable"));
@@ -85,6 +90,7 @@
   }
 
   namespace.getApi = getApi;
+  namespace.isShopifyPasswordPath = isShopifyPasswordPath;
   namespace.callRuntime = callRuntime;
   namespace.callTabsQuery = callTabsQuery;
   namespace.callTabsGet = callTabsGet;
